@@ -139,7 +139,6 @@ tramp
 
 # Docker
 **/*.pid
-docker-compose.override.yml
 .dockerignore
 
 # Log files

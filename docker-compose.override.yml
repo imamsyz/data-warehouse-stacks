@@ -1,0 +1,36 @@
+version: "3.9"
+
+# Override file for development - automatically loaded by docker-compose
+# This file provides additional configuration for development environment
+
+services:
+  # Development overrides for data warehouse services
+  clickhouse:
+    environment:
+      CLICKHOUSE_LOG_LEVEL: debug
+    volumes:
+      - ./clickhouse/logs:/var/log/clickhouse-server
+
+  airflow:
+    environment:
+      AIRFLOW__CORE__LOG_LEVEL: DEBUG
+      AIRFLOW__WEBSERVER__LOG_LEVEL: DEBUG
+    volumes:
+      - ./airflow/logs:/opt/airflow/logs
+
+  # Development overrides for monitoring services
+  prometheus:
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+      - '--log.level=debug'
+
+  grafana:
+    environment:
+      - GF_LOG_LEVEL=debug
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
