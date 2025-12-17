@@ -1,0 +1,10 @@
+# Mage AI Core Dependencies
+mage-ai[all]==0.9.77
+
+# Data Warehouse Connectors
+clickhouse-connect==0.6.23
+clickhouse-sqlalchemy==0.2.4
+psycopg2-binary==2.9.3
+
+# Logging (as per user preference)
+structlog==23.2.0

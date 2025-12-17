@@ -1,0 +1,70 @@
+# Mage AI Configuration File
+# This file contains configuration settings for Mage AI orchestration
+
+# Server Configuration
+server:
+  host: "0.0.0.0"
+  port: 6789
+  workers: 4
+  secret_key: "${MAGE_SECRET_KEY:-your-secret-key-change-this}"
+
+# Database Configuration
+database:
+  connection_url: "postgresql://${MAGE_DB_USER:-mage}:${MAGE_DB_PASSWORD:-mage}@mage-db:5432/${MAGE_DB_NAME:-mage}"
+
+# Redis Configuration
+redis:
+  url: "redis://mage-redis:6379/0"
+
+# Data Warehouse Connections (Standalone)
+data_warehouse:
+  clickhouse:
+    host: "clickhouse"
+    port: 8123
+    database: "${CH_DB:-default}"
+    username: "${CH_USER:-default}"
+    password: "${CH_PASSWORD:-}"
+
+# Object Storage Configuration (Standalone)
+object_storage:
+  minio:
+    endpoint: "http://minio:9000"
+    access_key: "${MINIO_ROOT_USER:-minioadmin}"
+    secret_key: "${MINIO_ROOT_PASSWORD:-minioadmin}"
+    bucket_raw: "${MINIO_BUCKET_RAW:-datalake-raw}"
+    bucket_warehouse: "${MINIO_BUCKET_WAREHOUSE:-datalake-warehouse}"
+    region: "us-east-1"
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "json"
+  timezone: "Asia/Jakarta"
+
+# Feature Flags
+features:
+  enable_v2: true
+  enable_block_output_cache: true
+  enable_data_integration: true
+  enable_llm: true
+  enable_scheduler: true
+  enable_worker: true
+
+# Pipeline Configuration
+pipelines:
+  default_timeout: 3600  # 1 hour
+  max_concurrent_pipelines: 10
+  retry_attempts: 3
+  retry_delay: 60  # seconds
+
+# Security Configuration
+security:
+  require_authentication: false  # Set to true for production
+  allowed_origins: ["*"]
+  cors_enabled: true
+
+# Monitoring Configuration
+monitoring:
+  enable_metrics: true
+  metrics_port: 6792
+  health_check_interval: 30  # seconds

@@ -1,0 +1,139 @@
+version: "3.9"
+
+services:
+  # Object Storage
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000" # S3 API
+      - "${MINIO_CONSOLE_PORT:-9001}:9001" # Web console
+    volumes:
+      - ./minio:/data
+    networks:
+      - dw-network
+
+  mc:
+    image: minio/mc:latest
+    container_name: minio-mc
+    depends_on: [minio]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET_RAW: ${MINIO_BUCKET_RAW}
+      MINIO_BUCKET_WAREHOUSE: ${MINIO_BUCKET_WAREHOUSE}
+    entrypoint: >
+      /bin/sh -c "
+      until (/usr/bin/mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}); do sleep 1; done;
+      /usr/bin/mc mb -p local/${MINIO_BUCKET_RAW} || true;
+      /usr/bin/mc mb -p local/${MINIO_BUCKET_WAREHOUSE} || true;
+      tail -f /dev/null
+      "
+    networks:
+      - dw-network
+
+  # Data Warehouse
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+    environment:
+      CLICKHOUSE_DB: ${CH_DB}
+      CLICKHOUSE_USER: ${CH_USER}
+      CLICKHOUSE_PASSWORD: ${CH_PASSWORD}
+    ports:
+      - "${CLICKHOUSE_HTTP_PORT:-8123}:8123" # HTTP
+      - "${CLICKHOUSE_NATIVE_PORT:-9000}:9000" # Native
+    volumes:
+      - ./clickhouse:/var/lib/clickhouse
+    networks:
+      - dw-network
+
+  # Airflow Database
+  airflow-db:
+    image: postgres:15
+    container_name: airflow-db
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - ./airflow/db:/var/lib/postgresql/data
+    networks:
+      - dw-network
+
+  # Orchestration
+  airflow:
+    image: apache/airflow:2.9.3
+    container_name: airflow
+    depends_on: [airflow-db, clickhouse, minio]
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db:5432/airflow
+      AIRFLOW__WEBSERVER__SECRET_KEY: supersecret
+      AIRFLOW_UID: ${AIRFLOW_UID}
+      AIRFLOW_GID: ${AIRFLOW_GID}
+      _PIP_ADDITIONAL_REQUIREMENTS: >
+        minio clickhouse-connect dbt-core dbt-clickhouse
+        great-expectations clickhouse-sqlalchemy
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/plugins:/opt/airflow/plugins
+      - ./airflow/dbt:/opt/airflow/dags/dbt
+      - ./data:/opt/airflow/data
+    command: >
+      bash -c "
+      airflow db init && \
+      airflow users create --username ${AIRFLOW_USER} --password ${AIRFLOW_PWD} \
+      --firstname Admin --lastname User --role Admin --email ${AIRFLOW_EMAIL} || true && \
+      exec airflow webserver & exec airflow scheduler
+      "
+    ports:
+      - "${AIRFLOW_PORT:-8080}:8080"
+    networks:
+      - dw-network
+
+  # Visualization
+  superset:
+    image: apache/superset:latest
+    container_name: superset
+    depends_on: [clickhouse]
+    environment:
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET}
+      SUPERSET_LOAD_EXAMPLES: "no"
+    volumes:
+      - ./superset:/app/superset_home
+    ports:
+      - "${SUPERSET_PORT:-8088}:8088"
+    command: >
+      /bin/sh -c "
+      superset fab create-admin \
+      --username ${SUPERSET_ADMIN} --firstname Admin --lastname User \
+      --email ${SUPERSET_EMAIL} --password ${SUPERSET_PWD} || true && \
+      superset db upgrade && \
+      superset init && \
+      gunicorn -w 2 -b 0.0.0.0:8088 'superset.app:create_app()'
+      "
+    networks:
+      - dw-network
+
+  # Caching
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - dw-network
+
+volumes:
+  redis_data:
+
+networks:
+  dw-network:
+    driver: bridge

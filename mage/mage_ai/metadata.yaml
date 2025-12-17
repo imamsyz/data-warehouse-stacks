@@ -1,0 +1,8 @@
+project_uuid: 0464db04b8424aa0ad643670fdd2933f
+features:
+  add_new_block_v2: true
+  automatic_kernel_cleanup: true
+  interactions: true
+  display_local_timezone: true
+help_improve_mage:
+pipelines:

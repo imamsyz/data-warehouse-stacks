@@ -1,0 +1,44 @@
+version: "3.9"
+
+# Main docker-compose file that includes data warehouse, monitoring, and Mage AI stacks
+# 
+# Usage:
+#   Start everything: docker-compose up -d
+#   Start only DW:   docker-compose -f docker-compose.dw.yml up -d
+#   Start only monitoring: docker-compose -f docker-compose.monitoring.yml up -d
+#   Start only Mage AI: docker-compose -f docker-compose.mage.yml up -d
+#
+# Services:
+#   Data Warehouse Stack (docker-compose.dw.yml):
+#     - MinIO (Object Storage)
+#     - ClickHouse (Data Warehouse)
+#     - Airflow (Orchestration)
+#     - Superset (Visualization)
+#     - Redis (Caching)
+#
+#   Monitoring Stack (docker-compose.monitoring.yml):
+#     - Prometheus (Metrics)
+#     - Grafana (Visualization)
+#     - DataHub (Data Lineage)
+#     - Loki (Log Aggregation)
+#     - Promtail (Log Collection)
+#
+#   Mage AI Stack (docker-compose.mage.yml):
+#     - Mage AI (Modern Data Orchestration)
+#     - Mage Database (PostgreSQL)
+#     - Mage Redis (Caching)
+#     - Mage Scheduler (Advanced Scheduling)
+#     - Mage Worker (Distributed Processing)
+
+# services:
+  # This file acts as a composition of the other three files
+  # The actual services are defined in:
+  # - docker-compose.dw.yml (Data Warehouse services)
+  # - docker-compose.monitoring.yml (Monitoring services)
+  # - docker-compose.mage.yml (Mage AI orchestration services)
+
+networks:
+  dw-network:
+    driver: bridge
+  monitoring-network:
+    driver: bridge

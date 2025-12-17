@@ -1,0 +1,212 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Python virtual environments
+venv/
+.envrc
+.venv/
+env/
+ENV/
+.conda/
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+.eggs/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.hypothesis/
+*.cover
+*.py,cover
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# Airflow files
+airflow/logs/*
+!airflow/logs/.gitkeep
+airflow/db/*
+!airflow/db/.gitkeep
+airflow/.env
+airflow/airflow.db
+airflow/airflow-webserver.pid
+
+# Superset local files
+superset_home/
+superset/.db_history
+superset/*.db
+superset/*.db-journal
+
+# Mage AI cache
+mage_data/
+mage_ai/.file_versions/*
+mage/.mage_cache/
+mage/mage_ai/.file_versions/charts/*
+mage/mage_ai/.file_versions/custom/*
+mage/mage_ai/.file_versions/data_loaders/*
+mage/mage_ai/.file_versions/data_exporters/*
+mage/mage_ai/.file_versions/data_loaders/*
+mage/mage_ai/.file_versions/pipelines/*
+mage/mage_ai/.file_versions/pipelines/*
+mage/mage_ai/.file_versions/transformers/*
+
+# dbt artifacts
+dbt/target/
+dbt/dbt_modules/
+dbt/.dbt/
+dbt/logs/
+dbt/profiles.yml
+!dbt/profiles.yml.example
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# IDE - VSCode
+.vscode/
+.code-workspace
+*.code-workspace
+
+# IDE - IntelliJ / PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# IDE - Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# IDE - Vim
+*.swp
+*.swo
+*.swn
+*~
+.netrwhist
+
+# IDE - Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Docker
+**/*.pid
+docker-compose.override.yml
+.dockerignore
+
+# Log files
+*.log
+logs/
+*.log.*
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+# MinIO
+minio/*
+!minio/.gitkeep
+*.minio
+
+# ClickHouse data
+clickhouse/*
+!clickhouse/.gitkeep
+clickhouse-server.log
+
+# Monitoring data
+monitoring/prometheus/data/*
+!monitoring/prometheus/data/.gitkeep
+monitoring/grafana/data/*
+!monitoring/grafana/data/.gitkeep
+monitoring/grafana/dashboards/*
+!monitoring/grafana/dashboards/*.json
+monitoring/grafana/grafana.db
+
+# DataHub local files
+datahub/.datahub/
+datahub/data/
+
+# Redis
+dump.rdb
+*.rdb
+
+# Data files (uncomment if you don't want to track data)
+# data/
+# *.csv
+# *.parquet
+# *.json
+# *.avro
+
+# Secrets and credentials
+secrets/
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+credentials.json
+service-account.json
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# OS generated files
+.Spotlight-V100
+.Trashes
+.fseventsd
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent

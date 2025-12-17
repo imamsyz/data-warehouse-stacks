@@ -1,0 +1,13 @@
+default:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      schema: {{ env_var('CH_DB', 'analytics') }}
+      host: clickhouse
+      port: 8123
+      user: {{ env_var('CH_USER', 'admin') }}
+      password: {{ env_var('CH_PASSWORD', 'admin123') }}
+      secure: False
+      verify: False
+      threads: 4

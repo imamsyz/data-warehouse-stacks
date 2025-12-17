@@ -1,0 +1,86 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Data Pipeline Monitoring",
+    "tags": ["data-pipeline", "airflow", "clickhouse"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Pipeline Success Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(airflow_dagrun_success[5m]) / rate(airflow_dagrun_total[5m]) * 100",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "ClickHouse Query Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(clickhouse_query_duration_seconds[5m])",
+            "refId": "A",
+            "legendFormat": "Query Duration"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Data Volume Processed",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "clickhouse_table_rows",
+            "refId": "A",
+            "legendFormat": "{{table}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Airflow Task Status",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "airflow_task_instance_state",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "id": 5,
+        "title": "Data Quality Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "dbt_test_results",
+            "refId": "A",
+            "legendFormat": "{{test_name}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s"
+  }
+}

@@ -1,0 +1,152 @@
+services:
+  # MinIO for Object Storage
+  minio:
+    image: minio/minio:latest
+    container_name: mage-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000" # S3 API
+      - "${MINIO_CONSOLE_PORT:-9001}:9001" # Web console
+    volumes:
+      - mage_minio_data:/data
+    networks:
+      - mage-network
+
+  # MinIO Client for bucket setup
+  mc:
+    image: minio/mc:latest
+    container_name: mage-mc
+    depends_on: [minio]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET_RAW: ${MINIO_BUCKET_RAW:-datalake-raw}
+      MINIO_BUCKET_WAREHOUSE: ${MINIO_BUCKET_WAREHOUSE:-datalake-warehouse}
+    entrypoint: >
+      /bin/sh -c "
+      until (/usr/bin/mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin}); do sleep 1; done;
+      /usr/bin/mc mb -p local/${MINIO_BUCKET_RAW:-datalake-raw} || true;
+      /usr/bin/mc mb -p local/${MINIO_BUCKET_WAREHOUSE:-datalake-warehouse} || true;
+      tail -f /dev/null
+      "
+    networks:
+      - mage-network
+
+  # ClickHouse for Data Warehouse
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: mage-clickhouse
+    environment:
+      CLICKHOUSE_DB: ${CH_DB:-default}
+      CLICKHOUSE_USER: ${CH_USER:-default}
+      CLICKHOUSE_PASSWORD: ${CH_PASSWORD:-}
+    ports:
+      - "${CLICKHOUSE_HTTP_PORT:-8123}:8123" # HTTP
+      - "${CLICKHOUSE_NATIVE_PORT:-9099}:9000" # Native
+    volumes:
+      - mage_clickhouse_data:/var/lib/clickhouse
+    networks:
+      - mage-network
+
+  # Mage AI Database
+  mage-db:
+    image: postgres:15
+    container_name: mage-db
+    environment:
+      POSTGRES_USER: ${MAGE_DB_USER:-mage}
+      POSTGRES_PASSWORD: ${MAGE_DB_PASSWORD:-mage}
+      POSTGRES_DB: ${MAGE_DB_NAME:-mage}
+    volumes:
+      - mage_db_data:/var/lib/postgresql/data
+    ports:
+      - "${MAGE_DB_PORT:-5433}:5432"
+    networks:
+      - mage-network
+
+  # Mage AI Redis Cache
+  mage-redis:
+    image: redis:7-alpine
+    container_name: mage-redis
+    ports:
+      - "${MAGE_REDIS_PORT:-6380}:6379"
+    volumes:
+      - mage_redis_data:/data
+    networks:
+      - mage-network
+
+  # Mage AI Core Service
+  mage:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mage
+    depends_on: [mage-db, mage-redis, clickhouse, minio, mc]
+    environment:
+      # Database configuration
+      MAGE_DB_CONNECTION_URL: postgresql://${MAGE_DB_USER:-mage}:${MAGE_DB_PASSWORD:-mage}@mage-db:5432/${MAGE_DB_NAME:-mage}
+      
+      # Redis configuration
+      REDIS_URL: redis://mage-redis:6379/0
+      
+      # Mage AI configuration
+      MAGE_SERVER_HOST: 0.0.0.0
+      MAGE_SERVER_PORT: 6789
+      MAGE_SERVER_WORKERS: 4
+      
+      # Data warehouse connections
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_PORT: 8123
+      CLICKHOUSE_DATABASE: ${CH_DB:-default}
+      CLICKHOUSE_USER: ${CH_USER:-default}
+      CLICKHOUSE_PASSWORD: ${CH_PASSWORD:-}
+      
+      # Object storage configuration
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      AWS_ENDPOINT: http://minio:9000
+      AWS_REGION: us-east-1
+      AWS_S3_BUCKET: ${MINIO_BUCKET_RAW:-datalake-raw}
+      
+      # Timezone configuration (Asia/Jakarta as per user preference)
+      TZ: Asia/Jakarta
+      
+      # Logging configuration
+      MAGE_LOGGING_LEVEL: INFO
+      
+      # Security
+      MAGE_SERVER_SECRET_KEY: ${MAGE_SECRET_KEY:-your-secret-key-change-this}
+      
+      # Feature flags
+      MAGE_FEATURE_FLAGS: |
+        {
+          "ENABLE_V2": true,
+          "ENABLE_BLOCK_OUTPUT_CACHE": true,
+          "ENABLE_DATA_INTEGRATION": true,
+          "ENABLE_LLM": true
+        }
+    ports:
+      - "${MAGE_PORT:-6789}:6789"
+    volumes:
+      - .:/home/mage
+      - ./data:/home/mage/data
+      - ./pipelines:/home/mage/mage_ai/pipelines
+    command: >
+      bash -c "
+      mage start mage_ai
+      "
+    networks:
+      - mage-network
+    restart: unless-stopped
+
+volumes:
+  mage_minio_data:
+  mage_clickhouse_data:
+  mage_db_data:
+  mage_redis_data:
+
+networks:
+  mage-network:
+    driver: bridge
