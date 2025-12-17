@@ -1,5 +1,9 @@
 # Data Warehouse Stack
 
+> **Disclaimer:**  
+This project is a proof of concept (POC), is not thoroughly tested, and is **not recommended for production environments**.
+
+
 A modern, open-source data warehouse stack built with Airflow, ClickHouse, dbt, and more.
 
 ## Architecture
